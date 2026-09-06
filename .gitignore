@@ -1,0 +1,8 @@
+# Chaves reais do Supabase — cada instalacao cria o seu config.js
+# a partir do config.example.js. O real NUNCA vai pro git.
+config.js
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.log
