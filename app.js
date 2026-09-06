@@ -211,7 +211,28 @@ function initRegistro(){
   const sp = $('r-prof'); sp.innerHTML = PROFS.map(p=>`<option>${p}</option>`).join('');
   $('r-data').value = today();
   pickCom = makePicker('pick-com','com'); pickQx = makePicker('pick-qx','qx');
-  renderRecBox(); renderAtalhos(); updateCount();
+  renderRecBox(); renderAtalhos(); updateCount(); renderRegList();
+}
+function resumoReg(r){
+  const parts=[];
+  if(r.com&&r.com.length) parts.push(r.com.join(', '));
+  if(r.qx&&r.qx.length) parts.push(r.qx.join(', '));
+  if(r.rec&&r.rec.length) parts.push(r.rec.map(x=>typeof x==='object'?x.nome:x).join(', '));
+  return parts.join(' · ')||'(sem itens)';
+}
+function renderRegList(){
+  const l=$('reg-list'); if(!l) return;
+  const regs=db.regs.slice().sort((a,b)=>b.data.localeCompare(a.data)).slice(0,15);
+  if(!regs.length){ l.innerHTML='<div class="it"><div class="t"><div>Nenhum atendimento registrado ainda.</div></div></div>'; return; }
+  l.innerHTML=regs.map(r=>`<div class="it"><div class="t"><b>${esc(r.prof)} · ${fmt(r.data)}</b><div>${esc(resumoReg(r))}</div></div><span class="x" data-id="${r.id}" title="Apagar">×</span></div>`).join('');
+  l.querySelectorAll('.x').forEach(x=> x.onclick = async ()=>{
+    const id=x.dataset.id;
+    if(!confirm('Apagar este atendimento? Essa ação não pode ser desfeita.')) return;
+    const { error } = await sb.from('agar_registros').delete().eq('id', id);
+    if(error){ alert('Não foi possível apagar: '+error.message); return; }
+    const i=db.regs.findIndex(o=>o.id===id); if(i>=0) db.regs.splice(i,1);
+    renderRegList(); renderAtalhos(); updateCount();
+  });
 }
 function maisUsadas(key, n){
   const m = {}; db.regs.forEach(r=> (r[key]||[]).forEach(v=>{ const nm=(typeof v==='object')?v.nome:v; m[nm]=(m[nm]||0)+1; }));
@@ -260,7 +281,7 @@ async function salvarRegistro(novo){
 
   db.regs.unshift({ id:data.id, prof:data.profissional, data:data.data, com:data.comorbidades||[], qx:data.queixas||[], rec:data.reclamacoes||[] });
   flash($('r-ok'));
-  pickCom.reset(); pickQx.reset(); renderRecBox(); renderAtalhos(); updateCount();
+  pickCom.reset(); pickQx.reset(); renderRecBox(); renderAtalhos(); updateCount(); renderRegList();
   if (!novo) document.querySelector('nav button[data-tab=dashboard]').click();
 }
 
@@ -285,8 +306,16 @@ function renderFaltaTab(){
   const tb = document.querySelector('#f-tab tbody');
   tb.innerHTML = db.faltas.slice().sort((a,b)=>b.data.localeCompare(a.data)).slice(0,12).map(f=>{
     const tx = f.agen ? Math.round(f.qtd/f.agen*100)+'%' : '—';
-    return `<tr><td>${fmt(f.data)}</td><td>${f.turno}</td><td>${f.qtd}</td><td>${f.agen||'—'}</td><td>${tx}</td></tr>`;
+    return `<tr><td>${fmt(f.data)}</td><td>${f.turno}</td><td>${f.qtd}</td><td>${f.agen||'—'}</td><td>${tx}</td><td><span class="x" data-id="${f.id}" title="Apagar">×</span></td></tr>`;
   }).join('');
+  tb.querySelectorAll('.x').forEach(x=> x.onclick = async ()=>{
+    const id=x.dataset.id;
+    if(!confirm('Apagar esta falta? Essa ação não pode ser desfeita.')) return;
+    const { error } = await sb.from('agar_faltas').delete().eq('id', id);
+    if(error){ alert('Não foi possível apagar: '+error.message); return; }
+    const i=db.faltas.findIndex(o=>o.id===id); if(i>=0) db.faltas.splice(i,1);
+    renderFaltaTab(); updateCount();
+  });
 }
 
 // ============================================================
