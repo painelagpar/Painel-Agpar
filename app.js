@@ -160,6 +160,13 @@ function hideTip(){ _tip.classList.add('hidden'); }
 const _canHover = !!(window.matchMedia && window.matchMedia('(hover:hover)').matches);
 document.addEventListener('click', e=>{ if(!e.target.closest('.info')) hideTip(); }, true);
 document.addEventListener('scroll', hideTip, true);
+// fechar dropdown de qualquer picker ao clicar fora dele
+document.addEventListener('click', e=>{
+  document.querySelectorAll('.picker .drop').forEach(d=>{
+    const box = d.closest('.picker');
+    if(box && !box.contains(e.target)) d.classList.add('hidden');
+  });
+});
 
 function makePicker(elId, type){
   const el = $(elId); const selected = [];
@@ -191,7 +198,7 @@ function makePicker(elId, type){
   inp.onblur = ()=> setTimeout(()=>drop.classList.add('hidden'), 200);
   return {
     get: ()=>selected.slice(),
-    reset: ()=>{ selected.length=0; renderChips(); renderDrop(); },
+    reset: ()=>{ selected.length=0; inp.value=''; renderChips(); drop.classList.add('hidden'); },
     add: n=>{ if(!selected.includes(n)){ selected.push(n); renderChips(); } }
   };
 }
