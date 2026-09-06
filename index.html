@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel do AGPAR</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<!-- Configuracao de conexao (copie config.example.js para config.js e preencha) -->
+<script src="config.js"></script>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="login" class="hidden">
+  <div class="box">
+    <div class="brand">
+      <img src="logo.png" alt="AGPAR" onerror="this.style.display='none'">
+      <h1>Painel do AGPAR</h1>
+      <p class="sub">Ambulatório de Gestantes e Puérperas de Alto Risco</p>
+    </div>
+    <form id="login-form" autocomplete="on">
+      <label for="lg-email">E-mail</label>
+      <input type="email" id="lg-email" placeholder="equipe@agpar" required autocomplete="username">
+      <label for="lg-senha">Senha</label>
+      <input type="password" id="lg-senha" placeholder="Senha de acesso" required autocomplete="current-password">
+      <button class="btn" type="submit" id="lg-btn">Entrar</button>
+      <div class="err" id="lg-err"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== CARREGANDO ===================== -->
+<div id="app-loading">Carregando…</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app" class="hidden">
+<header>
+  <img class="logo" src="logo.png" alt="AGPAR" onerror="this.style.display='none'">
+  <h1>Painel do AGPAR</h1>
+  <span class="tag">Metrificação de atendimentos</span>
+  <button class="gear no-print" id="btn-cfg" title="Configurações" aria-label="Configurações">⚙</button>
+  <button class="logout no-print" id="btn-logout">Sair</button>
+</header>
+<nav>
+  <button data-tab="registro" class="active">📝 Registro</button>
+  <button data-tab="faltometro">📅 Faltômetro</button>
+  <button data-tab="dashboard">📊 Dashboard</button>
+</nav>
+<main>
+
+<!-- REGISTRO -->
+<section id="tab-registro">
+  <div class="card">
+    <h2>Registrar atendimento</h2>
+    <div class="sub">Registro de ocorrência, sem identificação da paciente. Selecione o profissional, a data e as condições observadas.</div>
+    <div class="muted" id="r-count" style="margin-bottom:6px"></div>
+    <div class="row">
+      <div><label>Profissional</label><select id="r-prof"></select></div>
+      <div><label>Data</label><input type="date" id="r-data"></div>
+    </div>
+
+    <label>Comorbidades / condições</label>
+    <div class="atalhos" id="ata-com"></div>
+    <div class="picker" id="pick-com"></div>
+    <div class="hint">Digite para buscar. Toque no ⓘ para visualizar a definição.</div>
+
+    <label>Queixas</label>
+    <div class="atalhos" id="ata-qx"></div>
+    <div class="picker" id="pick-qx"></div>
+
+    <label>Reclamações / sugestões <span class="muted">(opcional)</span></label>
+    <div id="rec-box"></div>
+
+    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="r-salvar-novo">Salvar e novo</button>
+      <button class="btn sec" id="r-salvar">Salvar</button>
+    </div>
+    <div class="ok" id="r-ok">Registro salvo com sucesso.</div>
+    <div class="err" id="r-err"></div>
+  </div>
+</section>
+
+<!-- FALTOMETRO -->
+<section id="tab-faltometro" class="hidden">
+  <div class="card">
+    <h2>Faltômetro</h2>
+    <div class="sub">Registro de faltas por dia e turno.</div>
+    <div class="row">
+      <div><label>Data</label><input type="date" id="f-data"></div>
+      <div><label>Turno</label><select id="f-turno"><option>Manhã</option><option>Tarde</option></select></div>
+      <div><label>Agendados</label><input type="number" id="f-agen" min="0" value="0"></div>
+      <div><label>Faltas</label><input type="number" id="f-qtd" min="0" value="0"></div>
+    </div>
+    <div class="hint">O número de agendados é opcional e permite calcular a <b>taxa de absenteísmo (%)</b>. Normalmente registrado pela recepção.</div>
+    <div style="margin-top:14px"><button class="btn" id="f-salvar">Registrar faltas</button></div>
+    <div class="ok" id="f-ok">Faltas registradas com sucesso.</div>
+    <div class="err" id="f-err"></div>
+  </div>
+  <div class="card">
+    <h2>Últimos registros de falta</h2>
+    <table id="f-tab"><thead><tr><th>Data</th><th>Turno</th><th>Faltas</th><th>Agend.</th><th>Absent.</th></tr></thead><tbody></tbody></table>
+  </div>
+</section>
+
+<!-- CONFIG -->
+<section id="tab-config" class="hidden">
+  <div class="card">
+    <h2>Configurações</h2>
+    <div class="sub">Cadastro de novas comorbidades, queixas ou reclamações. A <b>definição</b> é exibida no ícone de informação (ⓘ) durante a seleção.</div>
+    <div class="seg no-print" id="cfg-seg">
+      <button data-cfg="comorbidade" class="active">Comorbidades</button>
+      <button data-cfg="queixa">Queixas</button>
+      <button data-cfg="reclamacao">Reclamações</button>
+    </div>
+    <div style="margin-top:14px">
+      <label>Nome</label><input id="cfg-nome" placeholder="ex.: Adensamento domiciliar">
+      <label>Definição / critério <span class="muted">(aparece no ⓘ)</span></label>
+      <input id="cfg-def" placeholder="ex.: mais de 5 pessoas morando na mesma casa">
+      <div style="margin-top:12px"><button class="btn" id="cfg-add">Adicionar</button></div>
+      <div class="err" id="cfg-err"></div>
+    </div>
+    <div class="cfg-list" id="cfg-list"></div>
+  </div>
+</section>
+
+<!-- DASHBOARD -->
+<section id="tab-dashboard" class="hidden">
+  <div class="card no-print">
+    <div class="dash-top">
+      <button class="btn sec" id="btn-filtros">⚙ Filtros</button>
+      <button class="btn sec" id="d-pdf">⬇ Baixar PDF</button>
+    </div>
+    <div id="dash-filtros" class="hidden" style="margin-top:16px">
+      <div class="row">
+        <div><label>De</label><input type="date" id="d-de"></div>
+        <div><label>Até</label><input type="date" id="d-ate"></div>
+        <div><label>Profissional</label><select id="d-prof"><option value="">Todos</option></select></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px">
+        <div class="seg" id="d-chart"><button data-ch="bar" class="active">Barra</button><button data-ch="pie">Pizza</button></div>
+        <button class="btn ghost" id="d-aplicar">Aplicar filtros</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2" id="kpis"></div>
+
+  <div class="card"><h2>📋 Boletim do período</h2><div class="sub">Resumo em texto para uso no relatório.</div>
+    <div id="boletim" style="font-size:14.5px;line-height:1.65;white-space:pre-wrap"></div>
+    <button class="btn ghost no-print" style="margin-top:10px" id="b-copiar">Copiar texto</button></div>
+
+  <button class="btn sec no-print" id="btn-graficos" style="width:100%;margin-bottom:18px">📊 Ver gráficos</button>
+
+  <div id="dash-graficos" class="hidden">
+    <div class="chart-grid">
+      <div class="card"><h2>Comorbidades mais frequentes</h2><div class="sub">no período e profissional filtrados</div><canvas id="ch-com" height="140"></canvas></div>
+      <div class="card"><h2>Principais queixas</h2><canvas id="ch-qx" height="140"></canvas></div>
+      <div class="card"><h2>Reclamações do AGPAR</h2><canvas id="ch-rec" height="140"></canvas></div>
+      <div class="card"><h2>Faltas por turno</h2><canvas id="ch-falta" height="140"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Incidência mês a mês</h2>
+      <div class="sub">Escolha uma comorbidade/queixa para ver a evolução no tempo</div>
+      <select id="d-item"></select>
+      <canvas id="ch-serie" height="140" style="margin-top:12px"></canvas>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
