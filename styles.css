@@ -118,7 +118,7 @@ th{font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:.5p
 .cfg-list .it{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;background:rgba(255,255,255,.4);border:1px solid var(--edge);border-radius:var(--r);margin-bottom:10px;backdrop-filter:blur(8px);box-shadow:0 4px 14px rgba(40,66,104,.1),inset 0 1px 0 rgba(255,255,255,.5)}
 .cfg-list .it .x{color:var(--azalea);cursor:pointer;font-weight:800;font-size:16px}
 .cfg-list .it .t{flex:1}.cfg-list .it .t b{font-size:14px}.cfg-list .it .t div{font-size:12.5px;color:var(--muted);margin-top:2px}
-.hidden{display:none}
+.hidden{display:none!important}
 .hint{font-size:12px;color:var(--muted);margin-top:5px}
 
 /* ---------- Login (glass) ---------- */
