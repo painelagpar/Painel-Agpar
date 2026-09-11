@@ -154,3 +154,9 @@ th{font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:.5p
   .kpi{color:var(--ink)}
   #login,#app-loading{display:none!important}
 }
+
+/* Barra fixa de crédito (rodapé) */
+.credito-fixo{position:fixed;left:0;right:0;bottom:0;z-index:900;background:var(--pri,#0e7c7b);color:#fff;font-size:12px;line-height:1.45;text-align:center;padding:8px 14px;box-shadow:0 -1px 6px rgba(0,0,0,.12)}
+.credito-fixo strong{font-weight:600}
+body{padding-bottom:54px}
+@media print{.credito-fixo{position:static;color:#000;background:#fff;border-top:1px solid #ccc;box-shadow:none}body{padding-bottom:0}}
